@@ -6,12 +6,12 @@ require 'vagrant/newdisk/version'
 Gem::Specification.new do |spec|
   spec.name          = "vagrant-newdisk"
   spec.version       = Vagrant::Newdisk::VERSION
-  spec.authors       = ["Yavor Nikolov"]
-  spec.email         = ["nikolov.javor@gmail.com"]
+  spec.authors       = ["Yavor Nikolov", "Jérôme Martin"]
+  spec.email         = ["nikolov.javor@gmail.com", "jerome.f.martin@gmail.com"]
 
-  spec.summary       = %q{Vagrant plugin to add VirtualBox disk}
-  spec.description   = %q{Vagrant plugin to add VirtualBox disk at creation time}
-  spec.homepage      = "https://github.com/dbfit/vagrant-newdisk"
+  spec.summary       = %q{Vagrant plugin to add VirtualBox/Hyper-V disk}
+  spec.description   = %q{Vagrant plugin to add VirtualBox/Hyper-V disk at creation time}
+  spec.homepage      = "https://github.com/jeromemartin/vagrant-newdisk"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
   spec.files = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
   end
+  spec.files += Dir['lib/vagrant/newdisk/scripts/*']
 
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }

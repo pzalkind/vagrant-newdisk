@@ -1,6 +1,6 @@
 # vagrant-newdisk
 
-A Vagrant plugin to add a disks in VirtualBox
+A Vagrant plugin to add a disk in VirtualBox or HyperV
 
 
 ## Installation

@@ -2,7 +2,7 @@ module Vagrant
   module Newdisk
     class Action
 
-      class NewDisk
+      class NewDiskVirtualBox
         def initialize(app, env)
           @app = app
           @machine = env[:machine]
@@ -11,7 +11,8 @@ module Vagrant
           @ui = env[:ui]
           if @machine.provider.to_s !~ /VirtualBox/
             @enabled = false
-            env[:ui].error "The vagrant-newdisk plugin only supports VirtualBox at present."
+            provider = @machine.provider.to_s
+            env[:ui].error "The vagrant-newdisk plugin only supports VirtualBox or HyperV at present: current is #{provider}."
           end
         end
 
@@ -20,13 +21,13 @@ module Vagrant
           if @enabled and @config.is_set?
             path = @config.path
             size = @config.size
-            env[:ui].info "call newdisk: size = #{size}, path = #{path}"
+            env[:ui].info "call virtualbox newdisk: size = #{size}, path = #{path}"
 
             if File.exist? path
-              env[:ui].info "skip newdisk - already exists: #{path}"
+              env[:ui].info "skip virtualbox newdisk - already exists: #{path}"
             else
               new_disk(env, path, size)
-              env[:ui].success "done newdisk: size = #{size}, path = #{path}"
+              env[:ui].success "done virtualbox newdisk: size = #{size}, path = #{path}"
             end
           end
 
@@ -100,6 +101,104 @@ module Vagrant
         end
       end
 
-    end
+
+      class NewDiskHyperV
+        def initialize(app, env)
+          @app = app
+          @machine = env[:machine]
+          @config = @machine.config.newdisk
+          @enabled = true
+          @ui = env[:ui]
+          if @machine.provider.to_s !~ /Hyper-V/
+            @enabled = false
+            provider = @machine.provider.to_s
+            env[:ui].error "The vagrant-newdisk plugin only supports VirtualBox or HyperV at present: current is #{provider}."
+          end
+        end
+
+        def call(env)
+          # Create the disk before boot
+          if @enabled and @config.is_set?
+            path = @config.path
+            size = @config.size
+            env[:ui].info "Machine is : #{@machine}"
+            env[:ui].info "call hyperv newdisk: size = #{size}, path = #{path}"
+
+            if File.exist? path
+              env[:ui].info "skip hyperv newdisk - already exists: #{path}"
+            else
+              if new_disk(env, path, size)
+                env[:ui].success "done hyperv newdisk: size = #{size}, path = #{path}"
+              end
+            end
+
+            attach_disk(env, path)
+          end
+
+          # Allow middleware chain to continue so VM is booted
+          @app.call(env)
+        end
+
+        private
+        
+        def is_num?(str)
+          !!Integer(str)
+        rescue ArgumentError, TypeError
+          false
+        end
+
+        def size_convert(size)
+          if is_num?(size)
+            # Numeric size is in MB
+            return size * 1024
+          end
+
+          regex = /([0-9]+)\s?(.*)/
+          hash = { 'KB' => 1024, 'MB' => 1024**2, 'GB' => 1024**3, 'TB' => 1024**4}
+          m = size.match(regex)
+          unless m.nil?
+            @ui.info "Match: #{m} -> #{m[1]} #{m[2]}"
+            if hash.include? m[2]
+              return m[1].to_i*hash[m[2]]
+            end
+          end
+          @ui.error "Invalid size syntax '#{size}''."
+          return nil
+        end
+
+        def new_disk(env, path, size)
+          disk_size = size_convert(size)
+          if disk_size.nil?
+            return false
+          else
+            driver = @machine.provider.driver
+            options = {
+              "DiskPath" => path,
+              "DiskSize" => disk_size,
+            }
+            s = File.join(File.dirname(__FILE__), 'scripts', 'new_vhd.ps1')
+            driver.execute(s, options)
+            return true
+          end
+        end
+
+        def attach_disk(env, path)
+          driver = @machine.provider.driver
+          options = {
+            "VMID" => @machine.id,
+            "DiskPath" => path,
+          }
+          s = File.join(File.dirname(__FILE__), 'scripts', 'add_vmharddiskdrive.ps1')
+          cmd = s
+          options.each do |key, value|
+            cmd += " -#{key} #{value}"
+          end
+
+          env[:ui].info "Executing Powershell: #{cmd}"
+          driver.execute(s, options)
+          return true
+        end
+      end
+	  end
   end
 end

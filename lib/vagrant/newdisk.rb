@@ -22,7 +22,8 @@ module Vagrant
 
       action_hook(:newdisk, :machine_action_up) do |hook|
         require_relative 'newdisk/actions'
-        hook.before(VagrantPlugins::ProviderVirtualBox::Action::Boot, Action::NewDisk)
+        hook.before(VagrantPlugins::ProviderVirtualBox::Action::Boot, Action::NewDiskVirtualBox)
+        hook.before(VagrantPlugins::HyperV::Action::Configure, Action::NewDiskHyperV)
       end
     end
   end
