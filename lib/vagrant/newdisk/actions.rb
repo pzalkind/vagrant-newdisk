@@ -121,7 +121,6 @@ module Vagrant
           if @enabled and @config.is_set?
             path = @config.path
             size = @config.size
-            env[:ui].info "Machine is : #{@machine}"
             env[:ui].info "call hyperv newdisk: size = #{size}, path = #{path}"
 
             if File.exist? path
@@ -189,12 +188,6 @@ module Vagrant
             "DiskPath" => path,
           }
           s = File.join(File.dirname(__FILE__), 'scripts', 'add_vmharddiskdrive.ps1')
-          cmd = s
-          options.each do |key, value|
-            cmd += " -#{key} #{value}"
-          end
-
-          env[:ui].info "Executing Powershell: #{cmd}"
           driver.execute(s, options)
           return true
         end
