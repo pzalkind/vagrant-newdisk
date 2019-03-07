@@ -12,7 +12,7 @@ module Vagrant
       name 'vagrant-newdisk'
 
       description <<-DESC
-      Provides the ability to add new VirtualBox disk at creation time.
+      Provides the ability to add new VirtualBox/Hyper-V disk at creation time.
       DESC
 
       config 'newdisk' do
