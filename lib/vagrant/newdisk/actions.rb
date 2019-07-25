@@ -121,12 +121,13 @@ module Vagrant
           if @enabled and @config.is_set?
             path = @config.path
             size = @config.size
-            env[:ui].info "call hyperv newdisk: size = #{size}, path = #{path}"
+            fixed = @config.fixed
+            env[:ui].info "call hyperv newdisk: size = #{size}, path = #{path}, fixed = #{fixed}"
 
             if File.exist? path
               env[:ui].info "skip hyperv newdisk - already exists: #{path}"
             else
-              if new_disk(env, path, size)
+              if new_disk(env, path, size, fixed)
                 env[:ui].success "done hyperv newdisk: size = #{size}, path = #{path}"
               end
             end
@@ -165,7 +166,7 @@ module Vagrant
           return nil
         end
 
-        def new_disk(env, path, size)
+        def new_disk(env, path, size, fixed)
           disk_size = size_convert(size)
           if disk_size.nil?
             return false
@@ -174,6 +175,7 @@ module Vagrant
             options = {
               "DiskPath" => path,
               "DiskSize" => disk_size,
+			  "Fixed" => fixed
             }
             s = File.join(File.dirname(__FILE__), 'scripts', 'new_vhd.ps1')
             driver.execute(s, options)
