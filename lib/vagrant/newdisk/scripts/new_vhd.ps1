@@ -6,7 +6,7 @@ param(
     [parameter (Mandatory=$true)]
     [uint64] $DiskSize,
 	[parameter (Mandatory=$false)]
-	[bool] $Fixed=$false
+	[switch] $Fixed=$false
 )
 
 try {
